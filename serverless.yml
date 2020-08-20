@@ -1,0 +1,43 @@
+service: slackbot-k
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: false
+    packager: 'yarn'
+  serverless-layers:
+    functions: # optional
+      - events
+    dependenciesPath: ./package.json
+    packageManager: yarn
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-layers
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: ap-northeast-1
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+  environment:
+    SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
+    SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    WATCHING_MESSAGE: 'news'
+  deploymentBucket:
+    name: slackbot-k-dev-serverless
+
+functions:
+  events:
+    handler: src/handler.events
+    events:
+      - http:
+          method: post
+          path: /slack/events
+exclude:
+  - node_modules
+  - package.json
+  - yarn.lock
